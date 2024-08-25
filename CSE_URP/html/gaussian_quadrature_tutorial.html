@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      -->
+<title>gaussian_quadrature_tutorial</title>
+<meta name="generator" content="MATLAB 23.2">
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
+<meta name="DC.date" content="2024-01-23">
+<meta name="DC.source" content="gaussian_quadrature_tutorial.m">
+<style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style>
+</head>
+<body>
+<div class="content">
+<pre class="codeinput">clc;
+clear;
+close <span class="string">all</span>;
+format <span class="string">long</span>;
+
+<span class="comment">% 조건</span>
+a = 0;
+b = 1;
+f = @(x) sin(pi * x);
+
+
+<span class="comment">% nGQ에 따른 error를 비교하기 위한 코드 (line 12 : line 46, 삭제해도 무방)</span>
+
+nGQ_values = 2:5;
+true_value = 2 / pi;
+
+
+approx_values = zeros(size(nGQ_values));
+relative_errors = zeros(size(nGQ_values)); <span class="comment">%relative error로 시각화</span>
+
+<span class="keyword">for</span> idx = 1:length(nGQ_values)
+    nGQ = nGQ_values(idx);
+    [points, weights] = GQref1D(nGQ);
+
+    approx_values(idx) = GQintegral1D(f,a,b,nGQ);
+
+    relative_errors(idx) = abs(true_value - approx_values(idx)) / (true_value) * 100;
+<span class="keyword">end</span>
+
+<span class="comment">% 그래프 플로팅</span>
+figure;
+
+yyaxis <span class="string">left</span>;
+plot(nGQ_values, approx_values, <span class="string">'-o'</span>, <span class="string">'DisplayName'</span>, <span class="string">'Approximated Value'</span>);
+ylabel(<span class="string">'Approximated Value'</span>);
+hold <span class="string">on</span>;
+plot(nGQ_values, repmat(true_value, 1, numel(nGQ_values)), <span class="string">'--'</span>, <span class="string">'DisplayName'</span>, <span class="string">'True Value'</span>);
+
+yyaxis <span class="string">right</span>;
+plot(nGQ_values, relative_errors, <span class="string">'-o'</span>, <span class="string">'DisplayName'</span>, <span class="string">'Relative True Error (%)'</span>);
+ylabel(<span class="string">'Relative True Error (%)'</span>);
+
+title(<span class="string">'Approximated Values and Relative True Error for Different nGQ'</span>);
+xlabel(<span class="string">'nGQ'</span>);
+legend(<span class="string">'show'</span>, <span class="string">'Location'</span>, <span class="string">'east'</span>);
+grid <span class="string">on</span>;
+
+
+
+<span class="comment">% Assignment</span>
+
+<span class="keyword">function</span> [points, weights] = GQref1D(nGQ) <span class="comment">%점과 가중치를 반환</span>
+<span class="keyword">switch</span> nGQ
+    <span class="keyword">case</span> 1
+        weights = 0;
+        points = 2;
+    <span class="keyword">case</span> 2
+        weights = [1,1];
+        points = [-0.5773502691896257,	0.5773502691896257];
+    <span class="keyword">case</span> 3
+        weights = [0.8888888888888888, 0.5555555555555556, 0.5555555555555556];
+        points = [0, -0.7745966692414834, 0.7745966692414834];
+    <span class="keyword">case</span> 4
+        weights = [0.6521451548625461, 0.6521451548625461, 0.3478548451374538, 0.3478548451374538];
+        points = [-0.3399810435848563, 0.3399810435848563, -0.8611363115940526, 0.8611363115940526];
+    <span class="keyword">case</span> 5
+        weights = [0.5688888888888889, 0.4786286704993665, 0.4786286704993665, 0.2369268850561891, 0.2369268850561891];
+        points = [0, -0.5384693101056831, 0.5384693101056831, -0.9061798459386640, 0.9061798459386640];
+
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+
+
+
+<span class="keyword">function</span> approx_values = GQintegral1D(f,a,b,nGQ) <span class="comment">% f is function; a,b is bound; nGQ determine points, weights</span>
+[points, weights] = GQref1D(nGQ);
+
+<span class="comment">%GQ를 계산하는 부분</span>
+approx_values = ( (b-a)/2 ) * sum(weights .* f( ( (b - a) / 2 * points ) + ( (a + b) / 2) ) );
+
+<span class="keyword">end</span>
+</pre>
+<img vspace="5" hspace="5" src="gaussian_quadrature_tutorial_01.png" alt=""> <p class="footer">
+<br>
+<a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2023b</a>
+<br>
+</p>
+</div>
+<!--
+##### SOURCE BEGIN #####
+clc;
+clear;
+close all;
+format long;
+
+% 조건
+a = 0;
+b = 1;
+f = @(x) sin(pi * x);
+
+
+% nGQ에 따른 error를 비교하기 위한 코드 (line 12 : line 46, 삭제해도 무방)
+
+nGQ_values = 2:5;
+true_value = 2 / pi;
+
+
+approx_values = zeros(size(nGQ_values));
+relative_errors = zeros(size(nGQ_values)); %relative error로 시각화
+
+for idx = 1:length(nGQ_values)
+    nGQ = nGQ_values(idx);
+    [points, weights] = GQref1D(nGQ);
+    
+    approx_values(idx) = GQintegral1D(f,a,b,nGQ);
+    
+    relative_errors(idx) = abs(true_value - approx_values(idx)) / (true_value) * 100;
+end
+
+% 그래프 플로팅
+figure;
+
+yyaxis left;
+plot(nGQ_values, approx_values, '-o', 'DisplayName', 'Approximated Value');
+ylabel('Approximated Value');
+hold on;
+plot(nGQ_values, repmat(true_value, 1, numel(nGQ_values)), 'REPLACE_WITH_DASH_DASH', 'DisplayName', 'True Value');
+
+yyaxis right;
+plot(nGQ_values, relative_errors, '-o', 'DisplayName', 'Relative True Error (%)');
+ylabel('Relative True Error (%)');
+
+title('Approximated Values and Relative True Error for Different nGQ');
+xlabel('nGQ');
+legend('show', 'Location', 'east');
+grid on;
+
+
+
+% Assignment 
+
+function [points, weights] = GQref1D(nGQ) %점과 가중치를 반환
+switch nGQ
+    case 1
+        weights = 0;
+        points = 2;
+    case 2
+        weights = [1,1];
+        points = [-0.5773502691896257,	0.5773502691896257];
+    case 3
+        weights = [0.8888888888888888, 0.5555555555555556, 0.5555555555555556];
+        points = [0, -0.7745966692414834, 0.7745966692414834];
+    case 4
+        weights = [0.6521451548625461, 0.6521451548625461, 0.3478548451374538, 0.3478548451374538];
+        points = [-0.3399810435848563, 0.3399810435848563, -0.8611363115940526, 0.8611363115940526];
+    case 5
+        weights = [0.5688888888888889, 0.4786286704993665, 0.4786286704993665, 0.2369268850561891, 0.2369268850561891];
+        points = [0, -0.5384693101056831, 0.5384693101056831, -0.9061798459386640, 0.9061798459386640];
+    
+end
+end
+
+
+
+function approx_values = GQintegral1D(f,a,b,nGQ) % f is function; a,b is bound; nGQ determine points, weights
+[points, weights] = GQref1D(nGQ);
+
+%GQ를 계산하는 부분
+approx_values = ( (b-a)/2 ) * sum(weights .* f( ( (b - a) / 2 * points ) + ( (a + b) / 2) ) );
+
+end
+
+##### SOURCE END #####
+-->
+</body>
+</html>

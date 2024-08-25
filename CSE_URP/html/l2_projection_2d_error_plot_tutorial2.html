@@ -1,0 +1,318 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      -->
+<title>l2_projection_2d_error_plot_tutorial2</title>
+<meta name="generator" content="MATLAB 24.1">
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
+<meta name="DC.date" content="2024-05-05">
+<meta name="DC.source" content="l2_projection_2d_error_plot_tutorial2.m">
+<style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style>
+</head>
+<body>
+<div class="content">
+<pre class="codeinput">clc;
+clear;
+close <span class="string">all</span>;
+
+<span class="comment">% n 값 범위 설정</span>
+n_values = 2.^(1:8); <span class="comment">%2의 몇 제곱까지 증가할 것인지 결정 (여기서는 2^8까지)</span>
+
+<span class="comment">% 각 n 값에 따른 총 오차 계산</span>
+total_errors = zeros(size(n_values));
+
+<span class="keyword">for</span> idx = 1:numel(n_values)
+    n = n_values(idx);
+
+    <span class="comment">% triangle mesh 생성하기</span>
+    m = n; <span class="comment">% 세로 element 갯수</span>
+
+    <span class="comment">% domain 범위 설정</span>
+    v1=[0,0];
+    v2=[1,0];
+    v3=[1,1];
+    v4=[0,1];
+
+    [v4e, c4v] = triangle2dmesh_domain(m, n, v1, v2, v3, v4);
+
+    <span class="comment">% l2_projection_2d</span>
+    f = @(x,y) sin(pi*x).*sin(pi*y);
+
+    <span class="comment">% M = local_M_2_M(v4e, c4v);</span>
+
+    area = 1/(2*m*n);
+    M_k = [2 1 1; 1 2 1; 1 1 2] / 12 * area;
+    M_k(:);
+    M = sparse(repmat(v4e, 3, 1), repelem(v4e, 3, 1), repmat(M_k(:), 1 ,size(repelem(v4e, 3, 1),2) ));
+
+    <span class="comment">% b = local_b_2_b(v4e, c4v, f);</span>
+
+    x4e = c4v(v4e,1);
+    y4e = c4v(v4e,2);
+    b_k = f(x4e,y4e) / 3 * area;
+    b = accumarray(v4e(:), b_k);
+
+    Pf = M\b;
+
+    <span class="comment">% 각 요소의 부피를 저장할 변수 초기화</span>
+    integration_errors = zeros(size(v4e, 2), 1);
+
+    <span class="comment">% 각 요소에 대한 적분 값 계산</span>
+    <span class="keyword">for</span> i = 1:size(v4e, 2)
+        <span class="comment">% 현재 요소의 꼭지점 좌표</span>
+        vertices = c4v(v4e(:, i), :);
+
+        <span class="comment">% 각 (x,y) 쌍에 대한 f(x,y) 계산</span>
+        x = vertices(:, 1);
+        y = vertices(:, 2);
+        result = arrayfun(f, x, y);
+
+        <span class="comment">% f_matrix 생성</span>
+        f_matrix = [x, y, result];
+
+        <span class="comment">% 세 점으로부터 평면 방정식 계산</span>
+        A = (y(2) - y(1)) * (result(3) - result(1)) - (result(2) - result(1)) * (y(3) - y(1));
+        B = (result(2) - result(1)) * (x(3) - x(1)) - (x(2) - x(1)) * (result(3) - result(1));
+        C = (x(2) - x(1)) * (y(3) - y(1)) - (y(2) - y(1)) * (x(3) - x(1));
+        D = -A * x(1) - B * y(1) - C * result(1);
+
+        <span class="comment">% f 평면 방정식 저장</span>
+        f_plane = A * x + B * y + C * result + D;
+
+        <span class="comment">% Pf 평면 방정식 구하기</span>
+        Pf_values = Pf(v4e(:,i));
+
+        <span class="comment">% 세 점으로부터 평면 방정식 계산</span>
+        v1 = [x(2)-x(1), y(2)-y(1), Pf_values(2)-Pf_values(1)];
+        v2 = [x(3)-x(1), y(3)-y(1), Pf_values(3)-Pf_values(1)];
+        n = cross(v1, v2); <span class="comment">% 법선 벡터</span>
+        A = n(1);
+        B = n(2);
+        C = n(3);
+        D = -A * x(1) - B * y(1) - C * Pf_values(1);
+
+        <span class="comment">% 평면 방정식 저장</span>
+        Pf_plane = [A, B, C, D];
+
+        <span class="comment">% f_plane - Pf_plane 계산</span>
+        f_plane_minus_Pf_plane = f_plane - Pf_plane;
+
+        <span class="comment">% 적분 값 계산</span>
+        integral_value = integral2(@(x,y) f_plane_minus_Pf_plane(1)*x + f_plane_minus_Pf_plane(2)*y + f_plane_minus_Pf_plane(3), <span class="keyword">...</span>
+                                   min(x), max(x), min(y), max(y));
+
+        <span class="comment">% 에러 계산</span>
+        integration_errors(i) = abs(integral_value);
+    <span class="keyword">end</span>
+
+    <span class="comment">% 총 에러 계산</span>
+    total_error = sqrt(sum(integration_errors));
+    total_errors(idx) = total_error;
+<span class="keyword">end</span>
+
+<span class="comment">% 결과 플롯</span>
+figure;
+loglog(n_values, total_errors, <span class="string">'-o'</span>, <span class="string">'LineWidth'</span>, 2);
+title(<span class="string">'Total Error vs. Number of Elements (n)'</span>);
+xlabel(<span class="string">'Number of Elements (n)'</span>);
+ylabel(<span class="string">'Total Error'</span>);
+grid <span class="string">on</span>;
+
+<span class="comment">% error rate 계산 및 출력</span>
+error_rate = -(log(total_errors(2:end)) - log(total_errors(1:end-1))) ./ log(2);
+disp(<span class="string">'Error rate:'</span>);
+disp(error_rate);
+</pre>
+<pre class="codeoutput">Error rate:
+    1.4230    1.2452    1.1131    1.0500    1.0229    1.0108    1.0053
+
+</pre>
+<img vspace="5" hspace="5" src="l2_projection_2d_error_plot_tutorial2_01.png" alt=""> <p class="footer">
+<br>
+<a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2024a</a>
+<br>
+</p>
+</div>
+<!--
+##### SOURCE BEGIN #####
+clc;
+clear;
+close all;
+
+% n 값 범위 설정
+n_values = 2.^(1:8); %2의 몇 제곱까지 증가할 것인지 결정 (여기서는 2^8까지)
+
+% 각 n 값에 따른 총 오차 계산
+total_errors = zeros(size(n_values));
+
+for idx = 1:numel(n_values)
+    n = n_values(idx);
+    
+    % triangle mesh 생성하기
+    m = n; % 세로 element 갯수
+
+    % domain 범위 설정
+    v1=[0,0];
+    v2=[1,0];
+    v3=[1,1];
+    v4=[0,1];
+
+    [v4e, c4v] = triangle2dmesh_domain(m, n, v1, v2, v3, v4);
+
+    % l2_projection_2d 
+    f = @(x,y) sin(pi*x).*sin(pi*y);
+
+    % M = local_M_2_M(v4e, c4v);
+
+    area = 1/(2*m*n);
+    M_k = [2 1 1; 1 2 1; 1 1 2] / 12 * area;
+    M_k(:);
+    M = sparse(repmat(v4e, 3, 1), repelem(v4e, 3, 1), repmat(M_k(:), 1 ,size(repelem(v4e, 3, 1),2) ));
+
+    % b = local_b_2_b(v4e, c4v, f);
+
+    x4e = c4v(v4e,1);
+    y4e = c4v(v4e,2);
+    b_k = f(x4e,y4e) / 3 * area;
+    b = accumarray(v4e(:), b_k);
+
+    Pf = M\b;
+
+    % 각 요소의 부피를 저장할 변수 초기화
+    integration_errors = zeros(size(v4e, 2), 1);
+
+    % 각 요소에 대한 적분 값 계산
+    for i = 1:size(v4e, 2)
+        % 현재 요소의 꼭지점 좌표
+        vertices = c4v(v4e(:, i), :);
+        
+        % 각 (x,y) 쌍에 대한 f(x,y) 계산
+        x = vertices(:, 1);
+        y = vertices(:, 2);
+        result = arrayfun(f, x, y);
+        
+        % f_matrix 생성
+        f_matrix = [x, y, result];
+        
+        % 세 점으로부터 평면 방정식 계산
+        A = (y(2) - y(1)) * (result(3) - result(1)) - (result(2) - result(1)) * (y(3) - y(1));
+        B = (result(2) - result(1)) * (x(3) - x(1)) - (x(2) - x(1)) * (result(3) - result(1));
+        C = (x(2) - x(1)) * (y(3) - y(1)) - (y(2) - y(1)) * (x(3) - x(1));
+        D = -A * x(1) - B * y(1) - C * result(1);
+        
+        % f 평면 방정식 저장
+        f_plane = A * x + B * y + C * result + D;
+
+        % Pf 평면 방정식 구하기
+        Pf_values = Pf(v4e(:,i));
+        
+        % 세 점으로부터 평면 방정식 계산
+        v1 = [x(2)-x(1), y(2)-y(1), Pf_values(2)-Pf_values(1)];
+        v2 = [x(3)-x(1), y(3)-y(1), Pf_values(3)-Pf_values(1)];
+        n = cross(v1, v2); % 법선 벡터
+        A = n(1);
+        B = n(2);
+        C = n(3);
+        D = -A * x(1) - B * y(1) - C * Pf_values(1);
+        
+        % 평면 방정식 저장
+        Pf_plane = [A, B, C, D];
+        
+        % f_plane - Pf_plane 계산
+        f_plane_minus_Pf_plane = f_plane - Pf_plane;
+
+        % 적분 값 계산
+        integral_value = integral2(@(x,y) f_plane_minus_Pf_plane(1)*x + f_plane_minus_Pf_plane(2)*y + f_plane_minus_Pf_plane(3), ...
+                                   min(x), max(x), min(y), max(y));
+
+        % 에러 계산
+        integration_errors(i) = abs(integral_value);
+    end
+
+    % 총 에러 계산
+    total_error = sqrt(sum(integration_errors));
+    total_errors(idx) = total_error;
+end
+
+% 결과 플롯
+figure;
+loglog(n_values, total_errors, '-o', 'LineWidth', 2);
+title('Total Error vs. Number of Elements (n)');
+xlabel('Number of Elements (n)');
+ylabel('Total Error');
+grid on;
+
+% error rate 계산 및 출력
+error_rate = -(log(total_errors(2:end)) - log(total_errors(1:end-1))) ./ log(2);
+disp('Error rate:');
+disp(error_rate);
+
+##### SOURCE END #####
+-->
+</body>
+</html>
